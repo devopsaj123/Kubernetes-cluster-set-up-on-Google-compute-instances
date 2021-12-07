@@ -1,0 +1,67 @@
+#install docker on both root
+
+1) sudo apt-get update
+
+2) sudo apt-get install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+3) curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+4) echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+5) sudo apt-get update
+
+6) sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+# check docker running on both root
+
+1) sudo docker run hello-world
+
+
+# docker run time on both root
+
+1) sudo mkdir /etc/docker
+
+2) cat <<EOF | sudo tee /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
+#kubeadm install on root both
+
+1) sudo apt-get update
+2) sudo apt-get install -y apt-transport-https ca-certificates curl
+3) sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+4) echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+5) sudo apt-get update
+6) sudo apt-get install -y kubelet kubeadm kubectl
+7) sudo apt-mark hold kubelet kubeadm kubectl
+
+#on master root only
+8) kubeadm init
+
+#on master root only
+9)   export KUBECONFIG=/etc/kubernetes/admin.conf
+
+#on master root only
+10) kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+11) kubectl get nodes
+
+
+troubleshoot [ERROR FileContent--proc-sys-net-ipv4-ip_forward]: /proc/sys/net/ipv4/ip_forward contents are not set to 1
+kubeadm reset
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+
